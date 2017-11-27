@@ -6,16 +6,28 @@ Created on Wed Nov 22 09:41:10 2017
 """
 import os
 import cv2
+import os.path as osp
 import numpy as np
 from PIL import Image
 from scipy.misc import imsave
 
 
 
+# Loads a greyscale image from a path.
 def load_greyscale_img(path):
-    return cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    return img[:, :, np.newaxis]
 
 
+
+# Loads and image.
+def load_img(path, rgb=True):
+    if rgb is True:
+        img = cv2.imread(path)
+    else:
+        img = load_greyscale_img(path)
+        
+    return img
 
 # Crops an image at its center to a specified size.
 def center_crop(img, size):
@@ -58,7 +70,7 @@ def gen_img_reps(img):
 
 
 
-# Loads all images from a directory with a certain extension
+# Loads all images from a directory with a certain extension.
 def load_imgs_from_dir(path, crop=None, rgb=True, ext='tif'):
     files = os.listdir(path)
     
@@ -99,10 +111,54 @@ def make_RGB(r_img, g_img, b_img=None):
     img[:, :, 1] = g_img
     
     if b_img is None:
-        img[:, :, 2].fill(127)
+        img[:, :, 2].fill(123)
     else:
         img[:, :, 2] = b_img
     
     return img
+
+
+
+# Identifies the number of classes a set of images has. 
+# Path should point to a directory with subfolders labeling each class.
+def find_num_classes(path, ext='tif'):
+    # Find all folders in the working directory.
+    folders = [x for x in os.listdir(path) if osp.isdir(osp.join(path, x))]
+    
+    # For each folder in the find if there are any files with the desired extension.
+    count = 0
+    for folder in folders:
+        folder_path = osp.join(path, folder)
+
+        # If a file was         
+        files = [x for x in os.listdir(folder_path) if not osp.isdir(osp.join(path, x))]
+        for file in files:
+            if file.endswith('.' + ext):
+                count += 1
+                break    
+
+    return count
+
+
+
+# Generates a list of all the images in the path with the classes in the subdirectory
+def generate_img_list(path, ext='tif'):
+    # Find all folders in the working directory.
+    folders = [x for x in os.listdir(path) if osp.isdir(osp.join(path, x))]
+    
+    # For each folder in the find if there are any files with the desired extension.
+    file_list = []
+    for folder in folders:
+        folder_path = osp.join(path, folder)
+
+        # If a file has the proper extension add it to the list      
+        files = [x for x in os.listdir(folder_path) if not osp.isdir(osp.join(path, x))]
+        for file in files:
+            if file.endswith('.' + ext):
+                file_list.append(osp.join(folder_path, file))
+    
+    return file_list
+
+
 
 
